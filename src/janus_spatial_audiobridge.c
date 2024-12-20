@@ -1178,12 +1178,15 @@ room-<unique room ID>: {
 #include <rnnoise.h>
 #endif
 
+//hack to get addrinfo struct to look ok in intellisense in vscode!
+#define __USE_XOPEN2K 
 #include <arpa/inet.h>
 #include <net/if.h>
 #include <sys/socket.h>
 #include <netdb.h>
 #include <sys/time.h>
 #include <poll.h>
+#include <sys/types.h>
 
 #include "../debug.h"
 #include "../apierror.h"
@@ -1197,6 +1200,7 @@ room-<unique room ID>: {
 #include "../sdp-utils.h"
 #include "../utils.h"
 #include "../ip-utils.h"
+
 
 
 /* Plugin information */
@@ -1485,7 +1489,7 @@ typedef struct janus_spatial_audiobridge_room {
 	gboolean spatial_audio;		/* Whether the mix will use spatial audio, using stereo */
 	gboolean audiolevel_ext;	/* Whether the ssrc-audio-level extension must be negotiated or not for new joins */
 	gboolean audiolevel_event;	/* Whether to emit event to other users about audiolevel */
-	uint default_expectedloss;	/* Percent of packets we expect participants may miss, to help with outgoing FEC: can be overridden per-participant */
+	unsigned int default_expectedloss;	/* Percent of packets we expect participants may miss, to help with outgoing FEC: can be overridden per-participant */
 	int32_t default_bitrate;	/* Default bitrate to use for all Opus streams when encoding */
 	int audio_active_packets;	/* Amount of packets with audio level for checkup */
 	int audio_level_average;	/* Average audio level */
@@ -1774,7 +1778,7 @@ typedef struct janus_spatial_audiobridge_participant {
 #ifdef HAVE_LIBOGG
 	janus_spatial_audiobridge_file *annc;	/* In case this is a fake participant, a playable file */
 #endif
-	uint group;					/* Forwarding group index, if enabled in the room */
+	unsigned int group;					/* Forwarding group index, if enabled in the room */
 	janus_mutex rec_mutex;		/* Mutex to protect the recorder from race conditions */
 	janus_mutex suspend_cond_mutex;
 	GCond suspend_cond;
@@ -1993,12 +1997,12 @@ typedef struct janus_spatial_audiobridge_rtp_forwarder_metadata {
 	janus_audiocodec codec;
 	uint32_t timestamp;
 	uint16_t seq_number;
-	uint group;
+	unsigned int group;
 	gboolean always_on;
 } janus_spatial_audiobridge_rtp_forwarder_metadata;
 /* Helper to create a new RTP forwarder with the right metadata */
 static guint32 janus_spatial_audiobridge_rtp_forwarder_add_helper(janus_spatial_audiobridge_room *room,
-		uint group, const gchar *host, uint16_t port, uint32_t ssrc, int pt,
+		unsigned int group, const gchar *host, uint16_t port, uint32_t ssrc, int pt,
 		janus_audiocodec codec, int srtp_suite, const char *srtp_crypto,
 		gboolean always_on, guint32 stream_id) {
 	if(room == NULL || host == NULL)
@@ -2346,7 +2350,7 @@ static int janus_spatial_audiobridge_create_static_rtp_forwarder(janus_config_ca
 	}
 
 	/* If this room uses groups, check if a valid group name was provided */
-	uint group = 0;
+	unsigned int group = 0;
 	if(audiobridge->groups != NULL) {
 		janus_config_item *group_name = janus_config_get(config, cat, janus_config_type_item, "rtp_forward_group");
 		if(group_name != NULL && group_name->value != NULL) {
@@ -5013,7 +5017,7 @@ static json_t *janus_spatial_audiobridge_process_synchronous_request(janus_spati
 			goto prepare_response;
 		}
 		/* If this room uses groups, check if a valid group name was provided */
-		uint group = 0;
+		unsigned int group = 0;
 		const char *group_name = NULL;
 		if(audiobridge->groups != NULL) {
 			group_name = json_string_value(json_object_get(root, "group"));
@@ -6570,7 +6574,7 @@ static void *janus_spatial_audiobridge_handler(void *data) {
 				admin = TRUE;
 			}
 			/* If this room uses groups, make sure a valid group name was provided */
-			uint group = 0;
+			unsigned int group = 0;
 			if(audiobridge->groups != NULL) {
 				JANUS_VALIDATE_JSON_OBJECT(root, group_parameters,
 					error_code, error_cause, TRUE,
@@ -7145,7 +7149,7 @@ static void *janus_spatial_audiobridge_handler(void *data) {
 			}
 			if(group && participant->room && participant->room->groups != NULL) {
 				const char *group_name = json_string_value(group);
-				uint group_id = GPOINTER_TO_UINT(g_hash_table_lookup(participant->room->groups, group_name));
+				unsigned int group_id = GPOINTER_TO_UINT(g_hash_table_lookup(participant->room->groups, group_name));
 				if(group_id == 0) {
 					JANUS_LOG(LOG_ERR, "No such group (%s)\n", group_name);
 					error_code = janus_spatial_audiobridge_ERROR_NO_SUCH_GROUP;
@@ -7389,7 +7393,7 @@ static void *janus_spatial_audiobridge_handler(void *data) {
 				admin = TRUE;
 			}
 			/* If this room uses groups, make sure a valid group name was provided */
-			uint group = 0;
+			unsigned int group = 0;
 			if(audiobridge->groups != NULL) {
 				JANUS_VALIDATE_JSON_OBJECT(root, group_parameters,
 					error_code, error_cause, TRUE,
@@ -8235,7 +8239,7 @@ static void *janus_spatial_audiobridge_mixer_thread(void *data) {
 	memset(resampled, 0, OPUS_SAMPLES*(audiobridge->spatial_audio ? 4 : 2));
 
 	/* In case forwarding groups are enabled, we need additional buffers */
-	uint groups_num = audiobridge->groups ? g_hash_table_size(audiobridge->groups) : 0, index = 0;
+	unsigned int groups_num = audiobridge->groups ? g_hash_table_size(audiobridge->groups) : 0, index = 0;
 	opus_int32 *groupBuffers = NULL;
 	uint32_t groupBufferSize = 0, groupBuffersSize = 0;
 	OpusEncoder **groupEncoders = NULL;
