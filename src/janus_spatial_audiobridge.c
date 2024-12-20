@@ -1366,6 +1366,12 @@ static struct janus_json_parameter join_parameters[] = {
 	{"denoise", JANUS_JSON_BOOL, 0},
 	{"record", JANUS_JSON_BOOL, 0},
 	{"filename", JSON_STRING, 0},
+	{"position_x", JSON_INTEGER, JANUS_JSON_PARAM_POSITIVE},
+	{"position_y", JSON_INTEGER, JANUS_JSON_PARAM_POSITIVE},
+	{"position_z", JSON_INTEGER, JANUS_JSON_PARAM_POSITIVE},
+	{"rtp", JSON_OBJECT, 0},
+	{"generate_offer", JANUS_JSON_BOOL, 0},
+	{"secret", JSON_STRING, 0},
 	{"generate_offer", JANUS_JSON_BOOL, 0},
 	{"rtp", JSON_OBJECT, 0},
 	{"secret", JSON_STRING, 0}
@@ -1397,6 +1403,9 @@ static struct janus_json_parameter configure_parameters[] = {
 	{"denoise", JANUS_JSON_BOOL, 0},
 	{"record", JANUS_JSON_BOOL, 0},
 	{"filename", JSON_STRING, 0},
+	{"position_x", JSON_INTEGER, JANUS_JSON_PARAM_POSITIVE},
+	{"position_y", JSON_INTEGER, JANUS_JSON_PARAM_POSITIVE},
+	{"position_z", JSON_INTEGER, JANUS_JSON_PARAM_POSITIVE},
 	{"display", JSON_STRING, 0},
 	{"generate_offer", JANUS_JSON_BOOL, 0},
 	{"update", JANUS_JSON_BOOL, 0}
@@ -5304,7 +5313,7 @@ static json_t *janus_spatial_audiobridge_process_synchronous_request(janus_spati
 			goto prepare_response;
 		}
 		/* If this room uses groups, make sure a valid group name was provided */
-		uint group = 0;
+		unsigned int group = 0;
 		if(audiobridge->groups != NULL) {
 			JANUS_VALIDATE_JSON_OBJECT(root, group_parameters,
 				error_code, error_cause, TRUE,

@@ -18,6 +18,7 @@ pkg_search_module(LIBJANSSON REQUIRED jansson)
 pkg_search_module(LIBOGG REQUIRED ogg)
 pkg_search_module(LIBSRTP2 REQUIRED libsrtp2)
 add_compile_definitions(HAVE_SRTP_2)
+add_compile_definitions(HAVE_LIBOGG)
 
 find_path(JANUS_INCLUDE_PATH janus/plugins/plugin.h
     PATHS ${JANUS_PREFIX}/include/)
